@@ -8,6 +8,11 @@ public class PathGenerator : MonoBehaviour
 {
   public GridManager gridManager; // Référence publique au script GridManager
   public GameObject pathPrefab; // Préfabriqué pour le marqueur de chemin
+  public GameObject straightPathPrefab; // Préfabriqué pour le chemin tout droit
+  public GameObject leftTurnPathPrefab; // Préfabriqué pour le tournant gauche
+  public GameObject rightTurnPathPrefab; // Préfabriqué pour le tournant droite
+
+  public GameObject grassPrefab; // Préfabriqué pour les cases non chemin
 
   private Vector2Int startPoint = new Vector2Int(1, 14); // 2ème colonne, 1ère ligne
   private Vector2Int endPoint = new Vector2Int(13, 1); // 13ème colonne, 2ème ligne
@@ -15,46 +20,61 @@ public class PathGenerator : MonoBehaviour
   // Start is called before the first frame update
   void Start()
   {
-    pathPoints.Clear(); // Vide la liste des points du chemin
-    pathPoints.Add(startPoint); // Ajoute le point de départ à la liste
+    int totalCases = (gridManager.gridSizeX - 2) * (gridManager.gridSizeY - 2); // Calcul en évitant les bords
+    int minPathLength = (int)(totalCases * 0.4); // 30% des cases de la grille
+    bool pathMeetsRequirement;
 
-    Vector2Int currentPoint = startPoint; // Initialise le point courant au point de départ
-
-    int maxIterations = 500000; // Un nombre suffisamment grand pour permettre la génération d'un chemin
-    int iterations = 0;
-
-    while (currentPoint != endPoint && iterations < maxIterations) // Tant que le point courant n'est pas le point d'arrivée
+    do
     {
-      List<Vector2Int> possibleMoves = GetPossibleMoves(currentPoint); // Récupère les mouvements possibles pour le point courant
-      if (possibleMoves.Count > 0)
+      pathPoints.Clear(); // Commencez par vider la liste des points du chemin
+      pathPoints.Add(startPoint); // Ajoute le point de départ à la liste
+
+      Vector2Int secondPoint = new Vector2Int(startPoint.x, startPoint.y - 1); // Fixe la deuxième case du chemin directement en dessous de la première
+      pathPoints.Add(secondPoint);
+
+      Vector2Int currentPoint = secondPoint; // Initialise le point courant à la deuxième case
+
+
+      int maxIterations = 500000; // Un nombre suffisamment grand pour permettre la génération d'un chemin
+      int iterations = 0;
+
+      while (currentPoint != endPoint && iterations < maxIterations)
       {
-        currentPoint = possibleMoves[UnityEngine.Random.Range(0, possibleMoves.Count)]; // Choix aléatoire d'un mouvement possible
-        pathPoints.Add(currentPoint); // Ajoute le point courant à la liste
-        iterations++;
-      }
-      else
-      {
-        // Si aucun mouvement n'est possible, revenez en arrière
-        if (pathPoints.Count > 1)
+        List<Vector2Int> possibleMoves = GetPossibleMoves(currentPoint);
+        if (possibleMoves.Count > 0)
         {
-          int pointsToRemove = Math.Min(15, pathPoints.Count - 1); // Calcule le nombre de points à supprimer
-          pathPoints.RemoveRange(pathPoints.Count - pointsToRemove, pointsToRemove); // Supprime les points
-          currentPoint = pathPoints[pathPoints.Count - 1]; // Met à jour le point courant au nouveau dernier point
+          currentPoint = possibleMoves[UnityEngine.Random.Range(0, possibleMoves.Count)];
+          pathPoints.Add(currentPoint);
         }
         else
         {
-          // Si vous êtes revenu au point de départ et qu'il n'y a toujours pas de mouvements possibles,
-          // vous pouvez choisir de réinitialiser complètement ou de gérer différemment.
-          break; // Sortie simple de la boucle pour cet exemple
+          if (pathPoints.Count > 15)
+          {
+            int pointsToRemove = Math.Min(15, pathPoints.Count - 1);
+            pathPoints.RemoveRange(pathPoints.Count - pointsToRemove, pointsToRemove);
+            currentPoint = pathPoints[pathPoints.Count - 1];
+          }
+          else
+          {
+            break; // Sortie de la boucle si le chemin est trop court pour revenir en arrière
+          }
         }
+        iterations++;
       }
-    }
-    if (iterations >= maxIterations)
-    {
-      Debug.LogError("Maximum iterations reached, path generation failed.");
-    }
 
-    VisualizePath(pathPoints); // Visualise le chemin
+      pathMeetsRequirement = pathPoints.Count >= minPathLength;
+    }
+    while (!pathMeetsRequirement);
+
+    if (!pathMeetsRequirement)
+    {
+      Debug.LogError("Failed to generate a path that meets the minimum length requirement.");
+    }
+    else
+    {
+      VisualizePath(pathPoints); // Visualise le chemin
+      FillNonPath(); // Remplis les cases non chemin
+    }
   }
 
   List<Vector2Int> GetPossibleMoves(Vector2Int currentPoint)
@@ -96,6 +116,32 @@ public class PathGenerator : MonoBehaviour
     {
       Vector3 worldPosition = gridManager.GetWorldPosition(point) + new Vector3(gridManager.cellSize / 2, 0.01f, gridManager.cellSize / 2); // Centre de la cellule
       Instantiate(pathPrefab, worldPosition, Quaternion.identity, transform);
+    }
+  }
+
+  void FillNonPath()
+  {
+    for (int x = 0; x < gridManager.gridSizeX; x++) // Inclut les bords
+    {
+      for (int y = 0; y < gridManager.gridSizeY; y++) // Inclut les bords
+      {
+        Vector2Int gridPoint = new Vector2Int(x, y);
+
+        // Vérifie si le point actuel n'est pas dans pathPoints
+        if (!pathPoints.Contains(gridPoint))
+        {
+          // Ce point n'est pas sur le chemin, instanciez le préfabriqué grassPrefab ici
+          Vector3 worldPosition = gridManager.GetWorldPosition(gridPoint) + new Vector3(gridManager.cellSize / 2, 0.01f, gridManager.cellSize / 2); // Centre de la cellule
+
+          // Sélectionne aléatoirement un angle de rotation sur l'axe Y parmi 0, 90, 180, 270
+          float[] angles = { 0f, 90f, 180f, 270f };
+          float randomYRotation = angles[UnityEngine.Random.Range(0, angles.Length)];
+
+          // Crée une rotation sur l'axe X de -89.98 degrés
+          Quaternion rotation = Quaternion.Euler(-89.98f, randomYRotation, 0f);
+          Instantiate(grassPrefab, worldPosition, rotation, transform);
+        }
+      }
     }
   }
 }
