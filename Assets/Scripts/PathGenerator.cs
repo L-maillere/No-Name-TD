@@ -1,82 +1,80 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class PathGenerator : MonoBehaviour
 {
-  public GridManager gridManager; // Référence publique au script GridManager
-  public GameObject pathPrefab; // Préfabriqué pour le marqueur de chemin
-  public GameObject straightPathPrefab; // Préfabriqué pour le chemin tout droit
-  public GameObject leftTurnPathPrefab; // Préfabriqué pour le tournant gauche
-  public GameObject rightTurnPathPrefab; // Préfabriqué pour le tournant droite
+  // Références aux objets nécessaires dans l'éditeur Unity
+  [SerializeField] private GridManager gridManager; // Gestionnaire de la grille
+  [SerializeField] private GameObject straightPathPrefab, leftTurnPathPrefab, rightTurnPathPrefab, grassPrefab; // Préfabriqués pour les différents types de chemins
 
-  public GameObject grassPrefab; // Préfabriqué pour les cases non chemin
-
+  // Points de départ et d'arrivée du chemin dans la grille
   private Vector2Int startPoint = new Vector2Int(1, 14); // 2ème colonne, 1ère ligne
   private Vector2Int endPoint = new Vector2Int(13, 1); // 13ème colonne, 2ème ligne
   private List<Vector2Int> pathPoints = new List<Vector2Int>(); // Liste pour stocker les points du chemin
-  // Start is called before the first frame update
-  void Start()
+
+  private void Start()
   {
-    int totalCases = (gridManager.gridSizeX - 2) * (gridManager.gridSizeY - 2); // Calcul en évitant les bords
-    int minPathLength = (int)(totalCases * 0.4); // 30% des cases de la grille
-    bool pathMeetsRequirement;
+    GeneratePath(); // Génère le chemin dès le démarrage
+  }
 
-    do
+  private void GeneratePath()
+  {
+    // Calcul du nombre total de cases dans la grille (en excluant les bords)
+    int totalCases = (gridManager.gridSizeX - 2) * (gridManager.gridSizeY - 2);
+    // Longueur minimale du chemin (40% des cases)
+    int minPathLength = Mathf.CeilToInt(totalCases * 0.4f);
+    bool pathMeetsRequirement = false; // Indique si le chemin respecte les exigences
+
+    // Continue de générer des chemins jusqu'à ce qu'un chemin valide soit trouvé
+    while (!pathMeetsRequirement)
     {
-      pathPoints.Clear(); // Commencez par vider la liste des points du chemin
-      pathPoints.Add(startPoint); // Ajoute le point de départ à la liste
+      pathPoints.Clear(); // Efface le chemin précédent
+      pathPoints.Add(startPoint); // Ajoute le point de départ
 
-      Vector2Int secondPoint = new Vector2Int(startPoint.x, startPoint.y - 1); // Fixe la deuxième case du chemin directement en dessous de la première
-      pathPoints.Add(secondPoint);
+      // Le point juste en dessous du point de départ est le deuxième point du chemin
+      Vector2Int currentPoint = new Vector2Int(startPoint.x, startPoint.y - 1);
+      pathPoints.Add(currentPoint);
 
-      Vector2Int currentPoint = secondPoint; // Initialise le point courant à la deuxième case
+      // Limite le nombre d'itérations pour éviter les boucles infinies
+      int maxIterations = 5000, iterations = 0;
 
-
-      int maxIterations = 500000; // Un nombre suffisamment grand pour permettre la génération d'un chemin
-      int iterations = 0;
-
+      // Construit le chemin point par point
       while (currentPoint != endPoint && iterations < maxIterations)
       {
-        List<Vector2Int> possibleMoves = GetPossibleMoves(currentPoint);
+        var possibleMoves = GetPossibleMoves(currentPoint); // Obtient les mouvements possibles depuis la position actuelle
         if (possibleMoves.Count > 0)
         {
-          currentPoint = possibleMoves[UnityEngine.Random.Range(0, possibleMoves.Count)];
-          pathPoints.Add(currentPoint);
+          currentPoint = possibleMoves[UnityEngine.Random.Range(0, possibleMoves.Count)]; // Choisis un mouvement aléatoire parmi les mouvements possibles
+          pathPoints.Add(currentPoint); // Ajoute le nouveau point au chemin
         }
-        else
+        else // Si aucun mouvement n'est possible, revient en arrière
         {
-          if (pathPoints.Count > 15)
+          if (pathPoints.Count > 15) // Ne revient en arrière que si la longueur du chemin le permet
           {
-            int pointsToRemove = Math.Min(15, pathPoints.Count - 1);
-            pathPoints.RemoveRange(pathPoints.Count - pointsToRemove, pointsToRemove);
-            currentPoint = pathPoints[pathPoints.Count - 1];
+            int pointsToRemove = Mathf.Min(15, pathPoints.Count - 1);
+            pathPoints.RemoveRange(pathPoints.Count - pointsToRemove, pointsToRemove); // Supprime les derniers points
+            currentPoint = pathPoints[pathPoints.Count - 1]; // Met à jour le point courant
           }
-          else
-          {
-            break; // Sortie de la boucle si le chemin est trop court pour revenir en arrière
-          }
+          else break; // Sort de la boucle si le chemin est trop court pour revenir en arrière
         }
         iterations++;
       }
 
+      // Vérifie si le chemin généré respecte la longueur minimale requise
       pathMeetsRequirement = pathPoints.Count >= minPathLength;
     }
-    while (!pathMeetsRequirement);
 
-    if (!pathMeetsRequirement)
+    // Si un chemin valide a été trouvé, le visualise et remplit les cases restantes
+    if (pathMeetsRequirement)
     {
-      Debug.LogError("Failed to generate a path that meets the minimum length requirement.");
+      VisualizePath(pathPoints); // Visualise le chemin
+      FillNonPath(); // Remplit les cases qui ne font pas partie du chemin
     }
     else
     {
-      VisualizePath(pathPoints); // Visualise le chemin
-      FillNonPath(); // Remplis les cases non chemin
+      Debug.LogError("Échec de la génération d'un chemin respectant la longueur minimale requise.");
     }
   }
-
   List<Vector2Int> GetPossibleMoves(Vector2Int currentPoint)
   {
     List<Vector2Int> moves = new List<Vector2Int>(); // Liste pour stocker les mouvements possibles
@@ -91,55 +89,80 @@ public class PathGenerator : MonoBehaviour
     return moves;
   }
 
-  bool IsAdjacentToPath(Vector2Int move)
+
+  // Vérifie si une case est adjacente à un point du chemin
+  private bool IsAdjacentToPath(Vector2Int move)
   {
     foreach (Vector2Int point in pathPoints)
     {
-      // Vérifie si 'move' est adjacent à un point du chemin
-      if ((Mathf.Abs(point.x - move.x) == 1 && point.y == move.y) ||
-          (Mathf.Abs(point.y - move.y) == 1 && point.x == move.x))
+      if ((Mathf.Abs(point.x - move.x) == 1 && point.y == move.y) || (Mathf.Abs(point.y - move.y) == 1 && point.x == move.x))
       {
-        // Si 'move' est adjacent à un point du chemin autre que la fin du chemin,
-        // alors ce mouvement n'est pas autorisé.
-        if (point != pathPoints[pathPoints.Count - 1])
-        {
-          return true; // 'move' est adjacent à une partie du chemin
-        }
+        if (point != pathPoints[pathPoints.Count - 1]) return true; // Exclut le dernier point du chemin
       }
     }
-    return false; // 'move' n'est pas adjacent à une partie du chemin
+    return false; // Si aucune case adjacente n'est trouvée
+  }
+
+  Quaternion DetermineTurnRotation(Vector2 directionToPrev, Vector2 directionToNext)
+  {
+    // Détermine l'orientation du préfabriqué basée sur les directions relatives
+    // Ajoutez ici votre logique pour déterminer la rotation en fonction des directions
+    return Quaternion.identity; // Retourne une rotation par défaut pour l'instant
   }
 
   void VisualizePath(List<Vector2Int> pathPoints)
   {
-    foreach (Vector2Int point in pathPoints)
+    for (int i = 0; i < pathPoints.Count; i++)
     {
-      Vector3 worldPosition = gridManager.GetWorldPosition(point) + new Vector3(gridManager.cellSize / 2, 0.01f, gridManager.cellSize / 2); // Centre de la cellule
-      Instantiate(pathPrefab, worldPosition, Quaternion.identity, transform);
+      Vector3 worldPosition = gridManager.GetWorldPosition(pathPoints[i]) + new Vector3(gridManager.cellSize / 2, 0.01f, gridManager.cellSize / 2);
+      Quaternion rotation = Quaternion.identity;
+      GameObject pathPrefabToUse = straightPathPrefab; // Utilisez le chemin tout droit par défaut
+
+      if (i > 0 && i < pathPoints.Count - 1) // Ignore le premier et le dernier point
+      {
+        Vector2 directionToPrev = ((Vector2)(pathPoints[i] - pathPoints[i - 1])).normalized;
+        Vector2 directionToNext = ((Vector2)(pathPoints[i + 1] - pathPoints[i])).normalized;
+
+        // Chemin tout droit
+        if (directionToPrev == directionToNext)
+        {
+          pathPrefabToUse = straightPathPrefab;
+          rotation = directionToPrev.x != 0 ? Quaternion.Euler(0, 90, 0) : Quaternion.Euler(0, 0, 0);
+        }
+        else // Tournant
+        {
+          // Calcule le produit vectoriel pour déterminer la direction du tournant
+          float crossProduct = directionToPrev.x * directionToNext.y - directionToPrev.y * directionToNext.x;
+          pathPrefabToUse = crossProduct > 0 ? leftTurnPathPrefab : rightTurnPathPrefab;
+
+          // Détermine l'orientation du préfabriqué basée sur les directions relatives
+          rotation = DetermineTurnRotation(directionToPrev, directionToNext);
+        }
+      }
+      else if (i == 0) // Pour le premier point, utilisez le chemin tout droit
+      {
+        pathPrefabToUse = straightPathPrefab;
+        Vector2 directionToNext = ((Vector2)(pathPoints[i + 1] - pathPoints[i])).normalized;
+        rotation = directionToNext.x != 0 ? Quaternion.Euler(0, 90, 0) : Quaternion.Euler(0, 0, 0);
+      }
+
+      Instantiate(pathPrefabToUse, worldPosition, rotation, transform);
     }
   }
 
-  void FillNonPath()
+  // Remplit les cases qui ne font pas partie du chemin
+  private void FillNonPath()
   {
-    for (int x = 0; x < gridManager.gridSizeX; x++) // Inclut les bords
+    for (int x = 0; x < gridManager.gridSizeX; x++)
     {
-      for (int y = 0; y < gridManager.gridSizeY; y++) // Inclut les bords
+      for (int y = 0; y < gridManager.gridSizeY; y++)
       {
         Vector2Int gridPoint = new Vector2Int(x, y);
-
-        // Vérifie si le point actuel n'est pas dans pathPoints
-        if (!pathPoints.Contains(gridPoint))
+        if (!pathPoints.Contains(gridPoint)) // Vérifie si la case n'est pas dans le chemin
         {
-          // Ce point n'est pas sur le chemin, instanciez le préfabriqué grassPrefab ici
-          Vector3 worldPosition = gridManager.GetWorldPosition(gridPoint) + new Vector3(gridManager.cellSize / 2, 0.01f, gridManager.cellSize / 2); // Centre de la cellule
-
-          // Sélectionne aléatoirement un angle de rotation sur l'axe Y parmi 0, 90, 180, 270
-          float[] angles = { 0f, 90f, 180f, 270f };
-          float randomYRotation = angles[UnityEngine.Random.Range(0, angles.Length)];
-
-          // Crée une rotation sur l'axe X de -89.98 degrés
-          Quaternion rotation = Quaternion.Euler(-89.98f, randomYRotation, 0f);
-          Instantiate(grassPrefab, worldPosition, rotation, transform);
+          Vector3 worldPosition = gridManager.GetWorldPosition(gridPoint) + new Vector3(gridManager.cellSize / 2, 0.01f, gridManager.cellSize / 2);
+          Quaternion rotation = Quaternion.Euler(-89.98f, UnityEngine.Random.Range(0, 4) * 90f, 0f); // Rotation aléatoire pour varier l'apparence
+          Instantiate(grassPrefab, worldPosition, rotation, transform); // Instancie le préfabriqué d'herbe
         }
       }
     }

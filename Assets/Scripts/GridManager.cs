@@ -67,7 +67,7 @@ public class GridManager : MonoBehaviour
     if (cell.x >= 0 && cell.x < gridSizeX && cell.y >= 0 && cell.y < gridSizeY)
     {
       // Ajuste la position pour centrer le marqueur sur la cellule
-      Vector3 cellCenter = GetWorldPosition(cell) + new Vector3(cellSize / 2, 0.01f, cellSize / 2);
+      Vector3 cellCenter = GetWorldPosition(cell) + new Vector3(cellSize / 2, 1f, cellSize / 2);
 
       // Crée et place le nouveau marqueur
       GameObject highlight = Instantiate(cellHightlightPrefab, cellCenter, Quaternion.identity);
