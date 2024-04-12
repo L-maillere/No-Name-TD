@@ -3,17 +3,17 @@ using UnityEngine.AI;
 
 public class ChasePlayer : MonoBehaviour
 {
-	GameObject base;
+	GameObject Base;
 	NavMeshAgent agent;
 
-	void start()
+	void Start()
 	{
-		base = GameObject.FindWithTag("Player"):
+		Base = GameObject.FindWithTag("Player");
 		agent = this.GetComponent<NavMeshAgent>();
 	}
 
 	void Update()
 	{
-		agent.SetDestination(base.transform.position);
+		agent.SetDestination(Base.transform.position);
 	}
 }
