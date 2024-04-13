@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 
 public abstract class Enemy : MonoBehaviour
@@ -11,6 +12,8 @@ public abstract class Enemy : MonoBehaviour
     [SerializeField] protected float speed;
     [SerializeField] protected bool isFlying;
     [SerializeField] Vector2Int cellPosition;
+    [SerializeField] NavMeshAgent navMeshAgent;
+    private Vector3 target;
 
     public void ApplyDamage(int damage)
     {
@@ -21,9 +24,9 @@ public abstract class Enemy : MonoBehaviour
         }
     }
 
-    private void Move()
+    private void Move(Vector3 target)
     {
-        //Voir avec Louis comment récupérer les pathPoints
+        navMeshAgent.SetDestination(target);
     }
 
     private void Death()
@@ -35,9 +38,14 @@ public abstract class Enemy : MonoBehaviour
     {
         return new Vector2Int((int)(transform.position.x / cellSize) , (int)(transform.position.z / cellSize));
     }
-
+    void Start()
+    {
+        target = GameObject.FindWithTag("Player").transform.position;
+        Debug.Log(target.ToString());
+    }
     void Update()
     {
         cellPosition = GetCellFromWorldPosition(1.0f);
+        Move(target);
     }
 }

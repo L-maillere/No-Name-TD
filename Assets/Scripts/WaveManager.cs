@@ -15,6 +15,10 @@ public class WaveManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetKeyDown("space"))
+        {
+            Instantiate(CubeCrab, transform.position, transform.rotation);
+        }
+            
     }
 }
