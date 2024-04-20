@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.AI.Navigation;
 
 public class PathGenerator : MonoBehaviour
 {
   // Références aux objets nécessaires dans l'éditeur Unity
   [SerializeField] private GridManager gridManager; // Gestionnaire de la grille
   [SerializeField] private GameObject straightPathPrefab, leftTurnPathPrefab, rightTurnPathPrefab, grassPrefab; // Préfabriqués pour les différents types de chemins
+  [SerializeField] private NavMeshSurface surface;
 
   // Points de départ et d'arrivée du chemin dans la grille
   private Vector2Int startPoint = new Vector2Int(1, 14); // 2ème colonne, 1ère ligne
@@ -15,6 +17,7 @@ public class PathGenerator : MonoBehaviour
   private void Start()
   {
     GeneratePath(); // Génère le chemin dès le démarrage
+    surface.BuildNavMesh();
   }
 
   private void GeneratePath()
@@ -107,6 +110,62 @@ public class PathGenerator : MonoBehaviour
   {
     // Détermine l'orientation du préfabriqué basée sur les directions relatives
     // Ajoutez ici votre logique pour déterminer la rotation en fonction des directions
+    // (+Y)
+    if (directionToPrev == new Vector2Int(0,1))
+    {
+          // (+Y,+X)
+          if (directionToNext == new Vector2Int(1,0))
+          {
+            return Quaternion.Euler(0,270,0);
+          }
+          // (+Y,-X)
+          if (directionToNext == new Vector2Int(-1,0))
+          {
+            return Quaternion.Euler(0,0,0);
+          }
+    }
+    // (-Y)
+    if (directionToPrev == new Vector2Int(0,-1))
+    {
+          // (-Y,+X)
+          if (directionToNext == new Vector2Int(1,0))
+          {
+            return Quaternion.Euler(0,180,0);
+          }
+          // (-Y,-X)
+          if (directionToNext == new Vector2Int(-1,0))
+          {
+            return Quaternion.Euler(0,90,0);
+          }
+    }
+    // (+X)
+    if (directionToPrev == new Vector2Int(1,0))
+    {
+          // (+X,+Y)
+          if (directionToNext == new Vector2Int(0,1))
+          {
+            return Quaternion.Euler(0,90,0);
+          }
+          // (+X,-Y)
+          if (directionToNext == new Vector2Int(0,-1))
+          {
+            return Quaternion.Euler(0,0,0);
+          }
+    }
+  // (-X)
+    if (directionToPrev == new Vector2Int(-1,0))
+    {
+          // (-X,+Y)
+          if (directionToNext == new Vector2Int(0,1))
+          {
+            return Quaternion.Euler(0,180,0);
+          }
+          // (-X,-Y)
+          if (directionToNext == new Vector2Int(0,-1))
+          {
+            return Quaternion.Euler(0,270,0);
+          }
+    }
     return Quaternion.identity; // Retourne une rotation par défaut pour l'instant
   }
 
@@ -136,6 +195,7 @@ public class PathGenerator : MonoBehaviour
           pathPrefabToUse = crossProduct > 0 ? leftTurnPathPrefab : rightTurnPathPrefab;
 
           // Détermine l'orientation du préfabriqué basée sur les directions relatives
+          Debug.Log((i, pathPoints[i], directionToPrev, directionToNext));
           rotation = DetermineTurnRotation(directionToPrev, directionToNext);
         }
       }
@@ -145,7 +205,6 @@ public class PathGenerator : MonoBehaviour
         Vector2 directionToNext = ((Vector2)(pathPoints[i + 1] - pathPoints[i])).normalized;
         rotation = directionToNext.x != 0 ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(0, 90, 0);
       }
-
       Instantiate(pathPrefabToUse, worldPosition, rotation, transform);
     }
   }
