@@ -111,60 +111,60 @@ public class PathGenerator : MonoBehaviour
     // Détermine l'orientation du préfabriqué basée sur les directions relatives
     // Ajoutez ici votre logique pour déterminer la rotation en fonction des directions
     // (+Y)
-    if (directionToPrev == new Vector2Int(0,1))
+    if (directionToPrev == new Vector2Int(0, 1))
     {
-          // (+Y,+X)
-          if (directionToNext == new Vector2Int(1,0))
-          {
-            return Quaternion.Euler(0,270,0);
-          }
-          // (+Y,-X)
-          if (directionToNext == new Vector2Int(-1,0))
-          {
-            return Quaternion.Euler(0,0,0);
-          }
+      // (+Y,+X)
+      if (directionToNext == new Vector2Int(1, 0))
+      {
+        return Quaternion.Euler(-89.98f, 180, 0);
+      }
+      // (+Y,-X)
+      if (directionToNext == new Vector2Int(-1, 0))
+      {
+        return Quaternion.Euler(-89.98f, 270, 0);
+      }
     }
     // (-Y)
-    if (directionToPrev == new Vector2Int(0,-1))
+    if (directionToPrev == new Vector2Int(0, -1))
     {
-          // (-Y,+X)
-          if (directionToNext == new Vector2Int(1,0))
-          {
-            return Quaternion.Euler(0,180,0);
-          }
-          // (-Y,-X)
-          if (directionToNext == new Vector2Int(-1,0))
-          {
-            return Quaternion.Euler(0,90,0);
-          }
+      // (-Y,+X)
+      if (directionToNext == new Vector2Int(1, 0))
+      {
+        return Quaternion.Euler(-89.98f, 90, 0);
+      }
+      // (-Y,-X)
+      if (directionToNext == new Vector2Int(-1, 0))
+      {
+        return Quaternion.Euler(-89.98f, 0, 0);
+      }
     }
     // (+X)
-    if (directionToPrev == new Vector2Int(1,0))
+    if (directionToPrev == new Vector2Int(1, 0))
     {
-          // (+X,+Y)
-          if (directionToNext == new Vector2Int(0,1))
-          {
-            return Quaternion.Euler(0,90,0);
-          }
-          // (+X,-Y)
-          if (directionToNext == new Vector2Int(0,-1))
-          {
-            return Quaternion.Euler(0,0,0);
-          }
+      // (+X,+Y)
+      if (directionToNext == new Vector2Int(0, 1))
+      {
+        return Quaternion.Euler(-89.98f, 0, 0);
+      }
+      // (+X,-Y)
+      if (directionToNext == new Vector2Int(0, -1))
+      {
+        return Quaternion.Euler(-89.98f, 270, 0);
+      }
     }
-  // (-X)
-    if (directionToPrev == new Vector2Int(-1,0))
+    // (-X)
+    if (directionToPrev == new Vector2Int(-1, 0))
     {
-          // (-X,+Y)
-          if (directionToNext == new Vector2Int(0,1))
-          {
-            return Quaternion.Euler(0,180,0);
-          }
-          // (-X,-Y)
-          if (directionToNext == new Vector2Int(0,-1))
-          {
-            return Quaternion.Euler(0,270,0);
-          }
+      // (-X,+Y)
+      if (directionToNext == new Vector2Int(0, 1))
+      {
+        return Quaternion.Euler(-89.98f, 90, 0);
+      }
+      // (-X,-Y)
+      if (directionToNext == new Vector2Int(0, -1))
+      {
+        return Quaternion.Euler(-89.98f, 180, 0);
+      }
     }
     return Quaternion.identity; // Retourne une rotation par défaut pour l'instant
   }
@@ -186,7 +186,7 @@ public class PathGenerator : MonoBehaviour
         if (directionToPrev == directionToNext)
         {
           pathPrefabToUse = straightPathPrefab;
-          rotation = directionToPrev.x != 0 ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(0, 90, 0);
+          rotation = directionToPrev.x != 0 ? Quaternion.Euler(-89.98f, 0, 0) : Quaternion.Euler(-89.98f, 90, 0);
         }
         else // Tournant
         {
@@ -203,7 +203,13 @@ public class PathGenerator : MonoBehaviour
       {
         pathPrefabToUse = straightPathPrefab;
         Vector2 directionToNext = ((Vector2)(pathPoints[i + 1] - pathPoints[i])).normalized;
-        rotation = directionToNext.x != 0 ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(0, 90, 0);
+        rotation = directionToNext.x != 0 ? Quaternion.Euler(-89.98f, 0, 0) : Quaternion.Euler(-89.98f, 90, 0);
+      }
+      else if (i == pathPoints.Count - 1) // Pour le dernier point
+      {
+        pathPrefabToUse = straightPathPrefab;
+        Vector2 directionToPrev = ((Vector2)(pathPoints[i] - pathPoints[i - 1])).normalized;
+        rotation = directionToPrev.x != 0 ? Quaternion.Euler(-89.98f, 0, 0) : Quaternion.Euler(-89.98f, 90, 0);
       }
       Instantiate(pathPrefabToUse, worldPosition, rotation, transform);
     }

@@ -332,12 +332,12 @@ Light:
   m_Enabled: 1
   serializedVersion: 11
   m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 0.9811321, g: 0.9811321, b: 0.9811321, a: 1}
+  m_Intensity: 2
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.802082
-  m_CookieSize: 10
+  m_CookieSize: 0
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
@@ -391,13 +391,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalRotation: {x: 0.39132234, y: 0.28168404, z: 0.027126959, w: 0.8756627}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 42.071, y: 43.882, z: 21.161}
 --- !u!1 &739033235
 GameObject:
   m_ObjectHideFlags: 0
@@ -461,9 +461,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gridManager: {fileID: 739033236}
-  straightPathPrefab: {fileID: 1585743848689167053, guid: ce62b60c76efd482e996578293e8e22f, type: 3}
-  leftTurnPathPrefab: {fileID: 5550034953060671032, guid: 63bdfe8dff4716e49bf200f7635de9f0, type: 3}
-  rightTurnPathPrefab: {fileID: 5550034953060671032, guid: 63bdfe8dff4716e49bf200f7635de9f0, type: 3}
+  straightPathPrefab: {fileID: 8463607968040605911, guid: c6d750af6a7324bb88bf97a5374a5d14, type: 3}
+  leftTurnPathPrefab: {fileID: 3700236632515522094, guid: c5928394e62b94d678357db5b0ed6f03, type: 3}
+  rightTurnPathPrefab: {fileID: 3700236632515522094, guid: c5928394e62b94d678357db5b0ed6f03, type: 3}
   grassPrefab: {fileID: 8819248121187043014, guid: 9c2bca70411b74badac535765363429d, type: 3}
   surface: {fileID: 739033239}
 --- !u!114 &739033239
@@ -485,7 +485,7 @@ MonoBehaviour:
   m_LayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_UseGeometry: 0
+  m_UseGeometry: 1
   m_DefaultArea: 0
   m_GenerateLinks: 0
   m_IgnoreNavMeshAgent: 1
@@ -6305,7 +6305,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 17355a19c9ff24e87a82a448c341729d, type: 2}
+  - {fileID: 2100000, guid: a1267fd4e35da4101b5f1d728337f257, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
